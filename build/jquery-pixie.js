@@ -3,202 +3,241 @@
 
 (function($) {
   const plugins = {
-    pane: (function() {
-      // jQuery Plugin: pixie::pane
+    paned: (function() {
+      // jQuery Plugin: pixie::paned
+
       const default_options = {
-        mode: null,
         border: 5,
         pos: '50%',
         color: 'lightgray',
       };
 
-      const resize_vertical = function() {
-        const settings = this.settings;
-        const this_ = this;
-        const box = {
-          left: this.offset().left - $('body').offset().left,
-          top: this.offset().top - $('body').offset().top,
-          width: this.width(),
-          height: this.height(),
-        };
-        const left = $(settings.left).css({
-          left: box.left,
-          top: box.top,
-          width: settings.pos,
-          height: box.height,
-          position: 'absolute',
-        });
-        settings.bar = $('<div></div>').css({
-          left: box.left + settings.pos,
-          top: box.top,
-          width: settings.border,
-          height: box.height,
-          position: 'absolute',
-          backgroundColor: settings.color,
-        }).draggable({
-          axis: 'x',
-          start: function(event, ui) {
-            move_vertical.call(this_, event, ui);
-          },
-          drag: function(event, ui) {
-            move_vertical.call(this_, event, ui);
-          },
-          stop: function(event, ui) {
-            move_vertical.call(this_, event, ui);
-          },
-        });
-        const right = $(settings.right).css({
-          left: box.left + settings.pos + settings.border,
-          top: box.top,
-          width: box.width - settings.pos - settings.border,
-          height: box.height,
-          position: 'absolute',
-        });
-        this.html('');
-        left.appendTo(this);
-        settings.bar.appendTo(this);
-        right.appendTo(this);
-      };
-
-      const move_vertical = function(event, ui) {
-        const settings = this.settings;
-        settings.pos = ui.offset.left;
-        const box = {
-          left: this.offset().left - $('body').offset().left,
-          top: this.offset().top - $('body').offset().top,
-          width: this.width(),
-          height: this.height(),
-        };
-        $(settings.left).css({
-          width: settings.pos,
-        });
-        settings.bar.css({
-          left: box.left + settings.pos,
-        });
-        $(settings.right).css({
-          left: box.left + settings.pos + settings.border,
-          width: box.width - settings.pos - settings.border,
-        });
-      };
-
-      const resize_horizontal = function() {
-        const settings = this.settings;
-        const this_ = this;
-        const box = {
-          left: this.offset().left - $('body').offset().left,
-          top: this.offset().top - $('body').offset().top,
-          width: this.width(),
-          height: this.height(),
-        };
-        const top = $(settings.top).css({
-          left: box.left,
-          top: box.top,
-          width: box.width,
-          height: settings.pos,
-          position: 'absolute',
-        });
-        settings.bar = $('<div></div>').css({
-          left: box.left,
-          top: box.top + settings.pos,
-          width: box.width,
-          height: settings.border,
-          position: 'absolute',
-          backgroundColor: settings.color,
-        }).draggable({
-          axis: 'y',
-          start: function(event, ui) {
-            move_horizontal.call(this_, event, ui);
-          },
-          drag: function(event, ui) {
-            move_horizontal.call(this_, event, ui);
-          },
-          stop: function(event, ui) {
-            move_horizontal.call(this_, event, ui);
-          },
-        });
-        const bottom = $(settings.bottom).css({
-          left: box.left,
-          top: box.top + settings.pos + settings.border,
-          width: box.width,
-          height: box.height - settings.pos - settings.border,
-          position: 'absolute',
-        });
-        this.empty();
-        top.appendTo(this);
-        settings.bar.appendTo(this);
-        bottom.appendTo(this);
-      };
-
-      const move_horizontal = function(event, ui) {
-        const settings = this.settings;
-        settings.pos = ui.offset.top;
-        const box = {
-          left: this.offset().left - $('body').offset().left,
-          top: this.offset().top - $('body').offset().top,
-          width: this.width(),
-          height: this.height(),
-        };
-        $(settings.top).css({
-          width: box.width,
-          height: settings.pos,
-        });
-        settings.bar.css({
-          top: box.top + settings.pos,
-          width: box.width,
-        });
-        $(settings.bottom).css({
-          top: box.top + settings.pos + settings.border,
-          width: box.width,
-          height: box.height - settings.pos - settings.border,
-        });
-      };
-
-      const methods = {
-        init: function(given_options) {
-          const this_ = this;
-          this.settings = $.extend(true, {}, default_options, given_options);
-          const settings = this.settings;
-          if (settings.mode == 'vertical') {
-            settings.pos = eval(
-              settings.pos.replace(/%/, ' / 100 * ' + this.width())
-            );
-            resize_vertical.call(this);
-            $(window).on('load resize', function() {
-              resize_vertical.call(this_);
-            });
-          } else if (settings.mode == 'horizontal') {
-            settings.pos = eval(
-              settings.pos.replace(/%/, ' / 100 * ' + this.height())
-            );
-            resize_horizontal.call(this);
-            $(window).on('load resize', function() {
-              resize_horizontal.call(this_);
-            });
-          } else {
-            $.error('required options: mode =' +
-                ' [\'vertical\', \'horizontal\'].select_one();');
+      const vpaned = {
+        show: function() {
+          for (let i = 0; i < this.children.length; i++) {
+            this.children[i].$.detach();
           }
+          this.$.empty();
+          const box = {
+            left: this.$.offset().left - $('body').offset().left,
+            top: this.$.offset().top - $('body').offset().top,
+            width: this.$.width(),
+            height: this.$.height(),
+          };
+          if (typeof this.options.pos === 'string' && this.options.pos.match(/%/)) {
+            this.options.pos = eval(
+              this.options.pos.replace(/%/, ' / 100 * ' + box.width)
+            );
+          }
+          let this_ = this;
+          if (this.bar == undefined) {
+            this.bar = {
+              $: $('<div></div>')
+                .css({
+                  backgroundColor: this.options.color,
+                  cursor: 'col-resize',
+                }).mousedown(function(event) {
+                  this_.dragging = true;
+                  this_.dragging_mouse_relative_pos = event.clientX - box.left;
+                  this_.dragging_initial_pos = this_.options.pos;
+                }),
+            };
+            this.$.mousemove(function(event) {
+              if (this_.dragging != false) {
+                let delta = event.clientX
+                          - box.left
+                          - this_.dragging_mouse_relative_pos;
+                this_.options.pos = this_.dragging_initial_pos + delta;
+                this_.show.call(this_);
+              }
+            });
+          }
+          this.children[0].$.css({
+            left: box.left,
+            top: box.top,
+            width: this.options.pos,
+            height: box.height,
+            position: 'absolute',
+          });
+          this.children[1].$.css({
+            left: box.left + this.options.pos + this.options.border,
+            top: box.top,
+            width: box.width - this.options.pos - this.options.border,
+            height: box.height,
+            position: 'absolute',
+          });
+          this.bar.$.css({
+            left: box.left + this.options.pos,
+            top: box.top,
+            width: this.options.border,
+            height: box.height,
+            position: 'absolute',
+          }).mouseup(function(event) {
+            let delta = event.clientX
+                      - box.left
+                      - this_.dragging_mouse_relative_pos;
+            this_.options.pos = this_.dragging_initial_pos + delta;
+            this_.show.call(this_);
+            this_.dragging = false;
+            this_.$.mousedown(function(event) {
+              this_.dragging = true;
+              this_.dragging_mouse_relative_pos = event.clientX - box.left;
+              this_.dragging_initial_pos = this_.options.pos;
+            });
+          });
+          this.children[0].$.appendTo(this.$);
+          this.bar.$.appendTo(this.$);
+          this.children[1].$.appendTo(this.$);
+          return this;
+        },
+        bar: undefined,
+        dragging: false,
+      };
+
+      const hpaned = {
+        show: function() {
+          for (let i = 0; i < this.children.length; i++) {
+            this.children[i].$.detach();
+          }
+          this.$.empty();
+          const box = {
+            left: this.$.offset().left - $('body').offset().left,
+            top: this.$.offset().top - $('body').offset().top,
+            width: this.$.width(),
+            height: this.$.height(),
+          };
+          if (typeof this.options.pos === 'string' && this.options.pos.match(/%/)) {
+            this.options.pos = eval(
+              this.options.pos.replace(/%/, ' / 100 * ' + box.height)
+            );
+          }
+          let this_ = this;
+          if (this.bar == undefined) {
+            this.bar = {
+              $: $('<div></div>')
+                .css({
+                  backgroundColor: this.options.color,
+                  cursor: 'row-resize',
+                }).mousedown(function(event) {
+                  this_.dragging = true;
+                  this_.dragging_mouse_relative_pos = event.clientY - box.top;
+                  this_.dragging_initial_pos = this_.options.pos;
+                }),
+            };
+            this.$.mousemove(function(event) {
+              if (this_.dragging != false) {
+                let delta = event.clientY
+                          - box.top
+                          - this_.dragging_mouse_relative_pos;
+                this_.options.pos = this_.dragging_initial_pos + delta;
+                this_.show.call(this_);
+              }
+            });
+          }
+          this.children[0].$.css({
+            left: box.left,
+            top: box.top,
+            width: box.width,
+            height: this.options.pos,
+            position: 'absolute',
+          });
+          this.children[1].$.css({
+            left: box.left,
+            top: box.top + this.options.pos + this.options.border,
+            width: box.width,
+            height: box.height - this.options.pos - this.options.border,
+            position: 'absolute',
+          });
+          this.bar.$.css({
+            left: box.left,
+            top: box.top + this.options.pos,
+            width: box.width,
+            height: this.options.border,
+            position: 'absolute',
+          }).mouseup(function(event) {
+            let delta = event.clientY
+                      - box.top
+                      - this_.dragging_mouse_relative_pos;
+            this_.options.pos = this_.dragging_initial_pos + delta;
+            this_.show.call(this_);
+            this_.dragging = false;
+            this_.$.mousedown(function(event) {
+              this_.dragging = true;
+              this_.dragging_mouse_relative_pos = event.clientY - box.top;
+              this_.dragging_initial_pos = this_.options.pos;
+            });
+          });
+          this.children[0].$.appendTo(this.$);
+          this.bar.$.appendTo(this.$);
+          this.children[1].$.appendTo(this.$);
+          return this;
+        },
+        bar: undefined,
+        dragging: false,
+      };
+
+      const paned = {
+        initialize: function(options) {
+          // /* global plugins */
+          let ret = plugins.container.apply(this);
+          $.extend(true, ret, paned);
+          ret.options = $.extend(true, {}, default_options, options);
+          if (ret.options.orientation == 'vertical') {
+            $.extend(true, ret, vpaned);
+          } else if (ret.options.orientation == 'horizontal') {
+            $.extend(true, ret, hpaned);
+          } else {
+            $.error('bad orientation');
+          }
+          return ret;
+        },
+        add1: function(element) {
+          this.children[0] = {
+            $: $(element),
+          };
+          return this;
+        },
+        add2: function(element) {
+          this.children[1] = {
+            $: $(element),
+          };
+          return this;
+        },
+        position: function(pos) {
+          this.options.pos = pos;
           return this;
         },
       };
 
-      return function(method, ...rest) {
-        if (methods[method]) {
-          return methods[method].apply(this, rest);
-        } else if (typeof method === 'object' || !method) {
-          return methods.init.apply(this, [method].concat(rest));
-        } else {
-          $.error('Method ' + method + ' does not exist on jQuery.pixie::pane');
-        }
+      return function(...args) {
+        return paned.initialize.apply(this, args);
+      };
+    })(),
+    container: (function() {
+      // jQuery Plugin: pixie::container
+
+      const container = {
+        initialize: function() {
+          return {
+            $: this,
+            children: [],
+          };
+        },
+      };
+
+      return function(...args) {
+        return container.initialize.apply(this, args);
       };
     })(),
   };
 
   $.fn.pixie = function(widget_name, ...args) {
     if (plugins[widget_name]) {
-      plugins[widget_name].apply(this, args);
+      return plugins[widget_name].apply(this, args);
     } else {
       $.error('Widget named ' + widget_name + ' not found.');
     }
   };
+
+  $('.pixie-widget').hide();
 })(jQuery);

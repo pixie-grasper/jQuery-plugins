@@ -18,6 +18,8 @@ task :build do
       EOJ
       file.write(File.open(path).read.split($/).collect{ |line|
         if line.length == 0 then ''
+        elsif line =~ /^( *)(\/\* *global plugins.*)$/
+          ' ' * 6 + $1 + '// ' + $2
         else ' ' * 6 + line
         end
       }.join($/))
@@ -31,11 +33,13 @@ task :build do
 
   $.fn.pixie = function(widget_name, ...args) {
     if (plugins[widget_name]) {
-      plugins[widget_name].apply(this, args);
+      return plugins[widget_name].apply(this, args);
     } else {
       $.error('Widget named ' + widget_name + ' not found.');
     }
   };
+
+  $('.pixie-widget').hide();
 })(jQuery);
     EOJ
   end
