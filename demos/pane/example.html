@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src='../../external/jquery-3.1.1/jquery-3.1.1.min.js'></script>
+    <script src='../../external/jquery-ui/jquery-ui.min.js'></script>
+    <script src='../../pixie/jquery-pane.js'></script>
+    <script lang='javascript'>
+      $(function() {
+        $('#top').pane({
+          mode: 'vertical',
+          pos: '30%',
+          left: '#left',
+          right: '#right',
+        });
+      });
+    </script>
+    <title>Pane</title>
+  </head>
+  <body>
+    <div id='top' style='height: 100vh;'>
+      <div id='left'>
+        foo!
+      </div>
+      <div id='right'>
+        bar!
+      </div>
+    </div>
+  </body>
+</html>
