@@ -2,26 +2,11 @@ module.exports = {
   'env': {
     'es6': true,
     'node': true,
-    'browser': true
+    'browser': true,
+    'jquery': true,
   },
-  'extends': [
-    'eslint:recommended',
-    'google'
-  ],
-  'globals': {
-    'require': true,
-  },
-  'parserOptions': {
-    'ecmaFeatures': {
-      'jsx': true,
-      'objectLiteralShorthandMethods': true
-    }
-  },
-  'plugins': [
-    'react'
-  ],
-  'react/jsx-uses-react': 1,
+  'extends': ['eslint:recommended', 'google'],
   'rules': {
-    'indent': [2, 2]
-  }
+    camelcase: 0,
+  },
 };
