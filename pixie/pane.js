@@ -172,6 +172,7 @@ const methods = {
       $.error('required options: mode =' +
           ' [\'vertical\', \'horizontal\'].select_one();');
     }
+    return this;
   },
 };
 
