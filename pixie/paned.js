@@ -13,8 +13,8 @@ const vpaned = {
     }
     this.$.empty();
     const box = {
-      left: this.$.offset().left - $('body').offset().left,
-      top: this.$.offset().top - $('body').offset().top,
+      left: 0,
+      top: 0,
       width: this.$.width(),
       height: this.$.height(),
     };
@@ -95,8 +95,8 @@ const hpaned = {
     }
     this.$.empty();
     const box = {
-      left: this.$.offset().left - $('body').offset().left,
-      top: this.$.offset().top - $('body').offset().top,
+      left: 0,
+      top: 0,
       width: this.$.width(),
       height: this.$.height(),
     };

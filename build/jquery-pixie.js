@@ -19,8 +19,8 @@
           }
           this.$.empty();
           const box = {
-            left: this.$.offset().left - $('body').offset().left,
-            top: this.$.offset().top - $('body').offset().top,
+            left: 0,
+            top: 0,
             width: this.$.width(),
             height: this.$.height(),
           };
@@ -50,6 +50,8 @@
                 this_.options.pos = this_.dragging_initial_pos + delta;
                 this_.show.call(this_);
               }
+            }).resize(function(event) {
+              this_.show.call(this_);
             });
           }
           this.children[0].$.css({
@@ -101,8 +103,8 @@
           }
           this.$.empty();
           const box = {
-            left: this.$.offset().left - $('body').offset().left,
-            top: this.$.offset().top - $('body').offset().top,
+            left: 0,
+            top: 0,
             width: this.$.width(),
             height: this.$.height(),
           };
@@ -132,6 +134,8 @@
                 this_.options.pos = this_.dragging_initial_pos + delta;
                 this_.show.call(this_);
               }
+            }).resize(function(event) {
+              this_.show.call(this_);
             });
           }
           this.children[0].$.css({
