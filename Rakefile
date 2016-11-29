@@ -18,8 +18,7 @@ task :build do
       EOJ
       file.write(File.open(path).read.split($/).collect{ |line|
         if line.length == 0 then ''
-        elsif line =~ /^( *)(\/\* *global plugins.*)$/
-          ' ' * 6 + $1 + '// ' + $2
+        elsif line =~ /^( *)(\/\* *global plugins.*)$/ then ' ' * 6 + $1 + '// ' + $2
         else ' ' * 6 + line
         end
       }.join($/))
