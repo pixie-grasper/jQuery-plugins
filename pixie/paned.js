@@ -37,7 +37,7 @@ const vpaned = {
           }),
       };
       this.$.mousemove(function(event) {
-        if (this_.dragging != false) {
+        if (this_.dragging) {
           let delta = event.clientX
                     - box.left
                     - this_.dragging_mouse_relative_pos;
@@ -73,7 +73,7 @@ const vpaned = {
       this_.options.pos = this_.dragging_initial_pos + delta;
       this_.show.call(this_);
       this_.dragging = false;
-      this_.$.mousedown(function(event) {
+      this_.bar.$.mousedown(function(event) {
         this_.dragging = true;
         this_.dragging_mouse_relative_pos = event.clientX - box.left;
         this_.dragging_initial_pos = this_.options.pos;
@@ -119,7 +119,7 @@ const hpaned = {
           }),
       };
       this.$.mousemove(function(event) {
-        if (this_.dragging != false) {
+        if (this_.dragging) {
           let delta = event.clientY
                     - box.top
                     - this_.dragging_mouse_relative_pos;
@@ -155,7 +155,7 @@ const hpaned = {
       this_.options.pos = this_.dragging_initial_pos + delta;
       this_.show.call(this_);
       this_.dragging = false;
-      this_.$.mousedown(function(event) {
+      this_.bar.$.mousedown(function(event) {
         this_.dragging = true;
         this_.dragging_mouse_relative_pos = event.clientY - box.top;
         this_.dragging_initial_pos = this_.options.pos;
