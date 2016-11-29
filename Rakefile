@@ -11,6 +11,7 @@ task :build do
   const plugins = {
     EOJ
     `find ./pixie/ -name '*.js'`.split($/).each do |path|
+      next if File.basename(path) =~ /^\./
       basename = File.basename path, '.js'
       file.write <<-EOJ
     #{basename}: (function() {
