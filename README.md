@@ -1,7 +1,7 @@
-# Creative PCB
+# jQuery plugins
 
 ## 何これ？
-これは、作成したjQuery用のプラグインです。
+これは、jQuery用のプラグインです。
 
 ## どう使うの？
 ```html
