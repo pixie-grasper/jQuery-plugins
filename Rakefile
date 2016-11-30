@@ -70,4 +70,6 @@ task :build do
 })(jQuery);
     EOJ
   end
+
+  `java -jar external/closure/closure-compiler-v20161024.jar --js_output_file build/jquery-pixie.min.js build/jquery-pixie.js`
 end
