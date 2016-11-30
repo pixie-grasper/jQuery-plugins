@@ -26,26 +26,14 @@ const vpaned = {
     let this_ = this;
     if (this.bar == undefined) {
       this.bar = {
-        $: $('<div></div>')
-          .css({
-            backgroundColor: this.options.color,
-            cursor: 'col-resize',
-          }).mousedown(function(event) {
-            this_.dragging = true;
-            this_.dragging_mouse_relative_pos = event.clientX - box.left;
-            this_.dragging_initial_pos = this_.options.pos;
-          }),
+        $: $('<div></div>').css({
+          backgroundColor: this.options.color,
+          cursor: 'col-resize',
+        }),
       };
-      this.$.mousemove(function(event) {
-        if (this_.dragging) {
-          let delta = event.clientX
-                    - box.left
-                    - this_.dragging_mouse_relative_pos;
-          this_.options.pos = this_.dragging_initial_pos + delta;
-          this_.show.call(this_);
-        }
-      });
     }
+    this.$.off('mousemove');
+    this.bar.$.off('mousedown').off('mouseup');
     this.children[0].$.css({
       left: box.left,
       top: box.top,
@@ -66,6 +54,10 @@ const vpaned = {
       width: this.options.border,
       height: box.height,
       position: 'absolute',
+    }).mousedown(function(event) {
+      this_.dragging = true;
+      this_.dragging_mouse_relative_pos = event.clientX - box.left;
+      this_.dragging_initial_pos = this_.options.pos;
     }).mouseup(function(event) {
       let delta = event.clientX
                 - box.left
@@ -73,15 +65,31 @@ const vpaned = {
       this_.options.pos = this_.dragging_initial_pos + delta;
       this_.show.call(this_);
       this_.dragging = false;
-      this_.bar.$.mousedown(function(event) {
-        this_.dragging = true;
-        this_.dragging_mouse_relative_pos = event.clientX - box.left;
-        this_.dragging_initial_pos = this_.options.pos;
-      });
+      this_.bar.$
+        .off('mousedown')
+        .mousedown(function(event) {
+          this_.dragging = true;
+          this_.dragging_mouse_relative_pos = event.clientX - box.left;
+          this_.dragging_initial_pos = this_.options.pos;
+        });
+    });
+    this.$.mousemove(function(event) {
+      if (this_.dragging) {
+        let delta = event.clientX
+                  - box.left
+                  - this_.dragging_mouse_relative_pos;
+        this_.options.pos = this_.dragging_initial_pos + delta;
+        this_.show.call(this_);
+      }
     });
     this.children[0].$.appendTo(this.$);
     this.bar.$.appendTo(this.$);
     this.children[1].$.appendTo(this.$);
+    for (let i = 0; i < this.children.length; i++) {
+      if (this.children[i].is_pixie) {
+        this.children[i].$.pixie('emit', 'showAll');
+      }
+    }
     return this;
   },
   bar: undefined,
@@ -105,29 +113,16 @@ const hpaned = {
         this.options.pos.replace(/%/, ' / 100 * ' + box.height)
       );
     }
-    let this_ = this;
     if (this.bar == undefined) {
       this.bar = {
-        $: $('<div></div>')
-          .css({
-            backgroundColor: this.options.color,
-            cursor: 'row-resize',
-          }).mousedown(function(event) {
-            this_.dragging = true;
-            this_.dragging_mouse_relative_pos = event.clientY - box.top;
-            this_.dragging_initial_pos = this_.options.pos;
-          }),
+        $: $('<div></div>').css({
+          backgroundColor: this.options.color,
+          cursor: 'row-resize',
+        }),
       };
-      this.$.mousemove(function(event) {
-        if (this_.dragging) {
-          let delta = event.clientY
-                    - box.top
-                    - this_.dragging_mouse_relative_pos;
-          this_.options.pos = this_.dragging_initial_pos + delta;
-          this_.show.call(this_);
-        }
-      });
     }
+    this.$.off('mousemove');
+    this.bar.$.off('mousedown').off('mouseup');
     this.children[0].$.css({
       left: box.left,
       top: box.top,
@@ -142,12 +137,17 @@ const hpaned = {
       height: box.height - this.options.pos - this.options.border,
       position: 'absolute',
     });
+    let this_ = this;
     this.bar.$.css({
       left: box.left,
       top: box.top + this.options.pos,
       width: box.width,
       height: this.options.border,
       position: 'absolute',
+    }).mousedown(function(event) {
+      this_.dragging = true;
+      this_.dragging_mouse_relative_pos = event.clientY - box.top;
+      this_.dragging_initial_pos = this_.options.pos;
     }).mouseup(function(event) {
       let delta = event.clientY
                 - box.top
@@ -155,15 +155,31 @@ const hpaned = {
       this_.options.pos = this_.dragging_initial_pos + delta;
       this_.show.call(this_);
       this_.dragging = false;
-      this_.bar.$.mousedown(function(event) {
-        this_.dragging = true;
-        this_.dragging_mouse_relative_pos = event.clientY - box.top;
-        this_.dragging_initial_pos = this_.options.pos;
-      });
+      this_.bar.$
+        .off('mousedown')
+        .mousedown(function(event) {
+          this_.dragging = true;
+          this_.dragging_mouse_relative_pos = event.clientY - box.top;
+          this_.dragging_initial_pos = this_.options.pos;
+        });
+    });
+    this.$.mousemove(function(event) {
+      if (this_.dragging) {
+        let delta = event.clientY
+                  - box.top
+                  - this_.dragging_mouse_relative_pos;
+        this_.options.pos = this_.dragging_initial_pos + delta;
+        this_.show.call(this_);
+      }
     });
     this.children[0].$.appendTo(this.$);
     this.bar.$.appendTo(this.$);
     this.children[1].$.appendTo(this.$);
+    for (let i = 0; i < this.children.length; i++) {
+      if (this.children[i].is_pixie) {
+        this.children[i].$.pixie('emit', 'showAll');
+      }
+    }
     return this;
   },
   bar: undefined,
@@ -171,6 +187,8 @@ const hpaned = {
 };
 
 const paned = {
+  type_of: 'paned',
+  kind_of: {'paned': true},
   initialize: function(options) {
     /* global plugins */
     let ret = plugins.container.apply(this);
@@ -186,15 +204,12 @@ const paned = {
     return ret;
   },
   add1: function(element) {
-    this.children[0] = {
-      $: $(element),
-    };
+    /* global to_pixie */
+    this.children[0] = to_pixie(element);
     return this;
   },
   add2: function(element) {
-    this.children[1] = {
-      $: $(element),
-    };
+    this.children[1] = to_pixie(element);
     return this;
   },
   position: function(pos) {

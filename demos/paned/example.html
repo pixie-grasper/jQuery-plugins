@@ -11,8 +11,14 @@
           })
           .add1('#left')
           .add2('#right')
-          .position('30%')
-          .show();
+          .position('30%');
+        $('#right')
+          .pixie('paned', {
+            orientation: 'horizontal',
+          })
+          .add1('#right-up')
+          .add2('#right-down');
+        $('#top').pixie('emit', 'showAll');
       });
     </script>
     <title>Paned</title>
@@ -25,7 +31,12 @@
         foo!
       </div>
       <div id='right'>
+      </div>
+      <div id='right-up'>
         bar!
+      </div>
+      <div id='right-down'>
+        buzz!
       </div>
     </div>
   </body>

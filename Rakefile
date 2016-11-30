@@ -8,6 +8,34 @@ task :build do
 // License: MIT
 
 (function($) {
+  const to_pixie = function(element) {
+    if (typeof element === 'string') {
+      element = $(element);
+    }
+    if (element.length == 0) {
+      $.error('bad selector (selected no elements).');
+    } else if (element.length > 1) {
+      $.error('bad selector (selected two or more elements).');
+    }
+    if (element[0].as_pixie) {
+      return element[0].as_pixie;
+    }
+    let ret = {
+      $: element,
+    };
+    element[0].as_pixie = ret;
+    return ret;
+  };
+
+  const as_pixie = function(element) {
+    if (element.length == 0) {
+      $.error('bad selector (selected no elements).');
+    } else if (element.length > 1) {
+      $.error('bad selector (selected two or more elements).');
+    }
+    return element[0].as_pixie;
+  };
+
   const plugins = {
     EOJ
     `find ./pixie/ -name '*.js'`.split($/).each do |path|
@@ -18,7 +46,7 @@ task :build do
       EOJ
       file.write(File.open(path).read.split($/).collect{ |line|
         if line.length == 0 then ''
-        elsif line =~ /^( *)(\/\* *global plugins.*)$/ then ' ' * 6 + $1 + '// ' + $2
+        elsif line =~ /^( *)(\/\* *global .*)$/ then ' ' * 6 + $1 + '// ' + $2
         else ' ' * 6 + line
         end
       }.join($/))
