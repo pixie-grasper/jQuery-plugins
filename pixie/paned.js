@@ -3,6 +3,8 @@
 const default_options = {
   border: 5,
   pos: '50%',
+  pos_min: '10%',
+  pos_max: '90% - 5',
   color: 'lightgray',
 };
 
@@ -19,6 +21,20 @@ const pos_normalize = function(options, length) {
     );
   } else {
     options.true_pos = options.pos;
+  }
+  if (typeof options.pos_min === 'string' && options.pos_min.match(/%/)) {
+    options.true_pos_min = eval(
+      options.pos_min.replace(/%/, ' / 100 * ' + length)
+    );
+  } else {
+    options.true_pos_min = options.pos_min;
+  }
+  if (typeof options.pos_max === 'string' && options.pos_max.match(/%/)) {
+    options.true_pos_max = eval(
+      options.pos_max.replace(/%/, ' / 100 * ' + length)
+    );
+  } else {
+    options.true_pos_max = options.pos_max;
   }
 };
 
@@ -72,6 +88,11 @@ const vpaned_init = function() {
         if (dragging) {
           const delta = event.clientX - this_.drag_start_pos_x;
           this_.options.true_pos = this_.options_pos_init + delta;
+          if (this_.options.true_pos < this_.options.true_pos_min) {
+            this_.options.true_pos = this_.options.true_pos_min;
+          } else if (this_.options.true_pos > this_.options.true_pos_max) {
+            this_.options.true_pos = this_.options.true_pos_max;
+          }
         }
       } else {
         dragging = false;
@@ -105,11 +126,6 @@ const vpaned = {
     this.bar.$.css({
       left: this.options.true_pos,
     });
-    for (let i = 0; i < this.children.length; i++) {
-      if (this.children[i].is_pixie) {
-        this.children[i].$.pixie('emit', 'showAll');
-      }
-    }
     return this;
   },
   resize: function() {
@@ -153,6 +169,11 @@ const hpaned_init = function() {
         if (dragging) {
           const delta = event.clientY - this_.drag_start_pos_y;
           this_.options.true_pos = this_.options_pos_init + delta;
+          if (this_.options.true_pos < this_.options.true_pos_min) {
+            this_.options.true_pos = this_.options.true_pos_min;
+          } else if (this_.options.true_pos > this_.options.true_pos_max) {
+            this_.options.true_pos = this_.options.true_pos_max;
+          }
         }
       } else {
         dragging = false;
@@ -185,11 +206,6 @@ const hpaned = {
     this.bar.$.css({
       top: this.options.true_pos,
     });
-    for (let i = 0; i < this.children.length; i++) {
-      if (this.children[i].is_pixie) {
-        this.children[i].$.pixie('emit', 'showAll');
-      }
-    }
     return this;
   },
   resize: function() {
