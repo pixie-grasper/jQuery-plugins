@@ -116,22 +116,26 @@
           this_.drag_start_pos_x = event.clientX;
           this_.options_pos_init = this_.options.true_pos;
           dragging = true;
+          $('body').css({
+            cursor: 'col-resize',
+          });
         });
         $(document).mousemove(function(event) {
           if (dragging) {
-            if (event.buttons % 2 != 0) {
-              const delta = event.clientX - this_.drag_start_pos_x;
-              this_.options.true_pos = this_.options_pos_init + delta;
-              if (this_.options.true_pos < this_.options.true_pos_min) {
-                this_.options.true_pos = this_.options.true_pos_min;
-              } else if (this_.options.true_pos > this_.options.true_pos_max) {
-                this_.options.true_pos = this_.options.true_pos_max;
-              }
-            } else {
-              dragging = false;
+            const delta = event.clientX - this_.drag_start_pos_x;
+            this_.options.true_pos = this_.options_pos_init + delta;
+            if (this_.options.true_pos < this_.options.true_pos_min) {
+              this_.options.true_pos = this_.options.true_pos_min;
+            } else if (this_.options.true_pos > this_.options.true_pos_max) {
+              this_.options.true_pos = this_.options.true_pos_max;
             }
             this_.$.pixie('emit', 'resize');
           }
+        }).mouseup(function(event) {
+          dragging = false;
+          $('body').css({
+            cursor: '',
+          });
         });
       };
 
@@ -195,22 +199,26 @@
           this_.drag_start_pos_y = event.clientY;
           this_.options_pos_init = this_.options.true_pos;
           dragging = true;
+          $('body').css({
+            cursor: 'row-resize',
+          });
         });
         $(document).mousemove(function(event) {
           if (dragging) {
-            if (event.buttons % 2 != 0) {
-              const delta = event.clientY - this_.drag_start_pos_y;
-              this_.options.true_pos = this_.options_pos_init + delta;
-              if (this_.options.true_pos < this_.options.true_pos_min) {
-                this_.options.true_pos = this_.options.true_pos_min;
-              } else if (this_.options.true_pos > this_.options.true_pos_max) {
-                this_.options.true_pos = this_.options.true_pos_max;
-              }
-            } else {
-              dragging = false;
+            const delta = event.clientY - this_.drag_start_pos_y;
+            this_.options.true_pos = this_.options_pos_init + delta;
+            if (this_.options.true_pos < this_.options.true_pos_min) {
+              this_.options.true_pos = this_.options.true_pos_min;
+            } else if (this_.options.true_pos > this_.options.true_pos_max) {
+              this_.options.true_pos = this_.options.true_pos_max;
             }
             this_.show.call(this_);
           }
+        }).mouseup(function(event) {
+          dragging = false;
+          $('body').css({
+            cursor: '',
+          });
         });
       };
 
