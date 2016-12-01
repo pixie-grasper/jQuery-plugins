@@ -120,14 +120,12 @@
         $(document).mousemove(function(event) {
           if (dragging) {
             if (event.buttons % 2 != 0) {
-              if (dragging) {
-                const delta = event.clientX - this_.drag_start_pos_x;
-                this_.options.true_pos = this_.options_pos_init + delta;
-                if (this_.options.true_pos < this_.options.true_pos_min) {
-                  this_.options.true_pos = this_.options.true_pos_min;
-                } else if (this_.options.true_pos > this_.options.true_pos_max) {
-                  this_.options.true_pos = this_.options.true_pos_max;
-                }
+              const delta = event.clientX - this_.drag_start_pos_x;
+              this_.options.true_pos = this_.options_pos_init + delta;
+              if (this_.options.true_pos < this_.options.true_pos_min) {
+                this_.options.true_pos = this_.options.true_pos_min;
+              } else if (this_.options.true_pos > this_.options.true_pos_max) {
+                this_.options.true_pos = this_.options.true_pos_max;
               }
             } else {
               dragging = false;
@@ -201,14 +199,12 @@
         $(document).mousemove(function(event) {
           if (dragging) {
             if (event.buttons % 2 != 0) {
-              if (dragging) {
-                const delta = event.clientY - this_.drag_start_pos_y;
-                this_.options.true_pos = this_.options_pos_init + delta;
-                if (this_.options.true_pos < this_.options.true_pos_min) {
-                  this_.options.true_pos = this_.options.true_pos_min;
-                } else if (this_.options.true_pos > this_.options.true_pos_max) {
-                  this_.options.true_pos = this_.options.true_pos_max;
-                }
+              const delta = event.clientY - this_.drag_start_pos_y;
+              this_.options.true_pos = this_.options_pos_init + delta;
+              if (this_.options.true_pos < this_.options.true_pos_min) {
+                this_.options.true_pos = this_.options.true_pos_min;
+              } else if (this_.options.true_pos > this_.options.true_pos_max) {
+                this_.options.true_pos = this_.options.true_pos_max;
               }
             } else {
               dragging = false;
