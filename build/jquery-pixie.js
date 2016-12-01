@@ -16,6 +16,7 @@
     }
     let ret = {
       $: element,
+      kind_of: {},
     };
     element[0].as_pixie = ret;
     return ret;
@@ -40,85 +41,105 @@
         color: 'lightgray',
       };
 
-      const vpaned = {
-        show: function() {
-          for (let i = 0; i < this.children.length; i++) {
-            this.children[i].$.detach();
-          }
-          this.$.empty();
-          const box = {
-            left: 0,
-            top: 0,
-            width: this.$.width(),
-            height: this.$.height(),
-          };
-          if (typeof this.options.pos === 'string' && this.options.pos.match(/%/)) {
-            this.options.pos = eval(
-              this.options.pos.replace(/%/, ' / 100 * ' + box.width)
-            );
-          }
-          let this_ = this;
-          if (this.bar == undefined) {
-            this.bar = {
-              $: $('<div></div>').css({
-                backgroundColor: this.options.color,
-                cursor: 'col-resize',
-              }),
-            };
-          }
-          this.$.off('mousemove');
-          this.bar.$.off('mousedown').off('mouseup');
-          this.children[0].$.css({
-            left: box.left,
-            top: box.top,
-            width: this.options.pos,
-            height: box.height,
+      const detach_children = function(children) {
+        for (let i = 0; i < children.length; i++) {
+          children[i].$.detach();
+        }
+      };
+
+      const pos_normalize = function(options, length) {
+        if (typeof options.pos === 'string' && options.pos.match(/%/)) {
+          options.true_pos = eval(
+            options.pos.replace(/%/, ' / 100 * ' + length)
+          );
+        } else {
+          options.true_pos = options.pos;
+        }
+      };
+
+      const create_box = function($) {
+        return {
+          width: $.width(),
+          height: $.height(),
+        };
+      };
+
+      const paned_init = function() {
+        this.bar = {
+          $: $('<div></div>').css({
+            backgroundColor: this.options.color,
             position: 'absolute',
+          }),
+        };
+        for (let i = 0; i < this.children.length; i++) {
+          this.children[i].$.css({
+            position: 'absolute',
+          });
+        }
+      };
+
+      const vpaned_resize = function() {
+        const height = this.$.height();
+        this.bar.$.css({
+          cursor: 'col-resize',
+          width: this.options.border,
+          height: height,
+        });
+        for (let i = 0; i < this.children.length; i++) {
+          this.children[i].$.css({
+            height: height,
+          });
+        }
+      };
+
+      const vpaned_init = function() {
+        vpaned_resize.call(this);
+        let dragging = false;
+        const this_ = this;
+        this.bar.$.mousedown(function(event) {
+          this_.drag_start_pos_x = event.clientX;
+          this_.options_pos_init = this_.options.true_pos;
+          dragging = true;
+        });
+        $(document).mousemove(function(event) {
+          if (dragging) {
+            if (event.buttons % 2 != 0) {
+              if (dragging) {
+                const delta = event.clientX - this_.drag_start_pos_x;
+                this_.options.true_pos = this_.options_pos_init + delta;
+              }
+            } else {
+              dragging = false;
+            }
+            this_.$.pixie('emit', 'resize');
+          }
+        });
+      };
+
+      const vpaned = {
+        initialized: false,
+        show: function() {
+          const box = create_box(this.$);
+          if (!this.initialized) {
+            paned_init.call(this);
+            vpaned_init.call(this);
+            detach_children(this.children);
+            pos_normalize(this.options, box.width);
+            this.children[0].$.appendTo(this.$);
+            this.bar.$.appendTo(this.$);
+            this.children[1].$.appendTo(this.$);
+            this.initialized = true;
+          }
+          this.children[0].$.css({
+            width: this.options.true_pos,
           });
           this.children[1].$.css({
-            left: box.left + this.options.pos + this.options.border,
-            top: box.top,
-            width: box.width - this.options.pos - this.options.border,
-            height: box.height,
-            position: 'absolute',
+            left: this.options.true_pos + this.options.border,
+            width: box.width - this.options.true_pos - this.options.border,
           });
           this.bar.$.css({
-            left: box.left + this.options.pos,
-            top: box.top,
-            width: this.options.border,
-            height: box.height,
-            position: 'absolute',
-          }).mousedown(function(event) {
-            this_.dragging = true;
-            this_.dragging_mouse_relative_pos = event.clientX - box.left;
-            this_.dragging_initial_pos = this_.options.pos;
-          }).mouseup(function(event) {
-            let delta = event.clientX
-                      - box.left
-                      - this_.dragging_mouse_relative_pos;
-            this_.options.pos = this_.dragging_initial_pos + delta;
-            this_.show.call(this_);
-            this_.dragging = false;
-            this_.bar.$
-              .off('mousedown')
-              .mousedown(function(event) {
-                this_.dragging = true;
-                this_.dragging_mouse_relative_pos = event.clientX - box.left;
-                this_.dragging_initial_pos = this_.options.pos;
-              });
+            left: this.options.true_pos,
           });
-          this.$.mousemove(function(event) {
-            if (this_.dragging) {
-              let delta = event.clientX
-                        - box.left
-                        - this_.dragging_mouse_relative_pos;
-              this_.options.pos = this_.dragging_initial_pos + delta;
-              this_.show.call(this_);
-            }
-          });
-          this.children[0].$.appendTo(this.$);
-          this.bar.$.appendTo(this.$);
-          this.children[1].$.appendTo(this.$);
           for (let i = 0; i < this.children.length; i++) {
             if (this.children[i].is_pixie) {
               this.children[i].$.pixie('emit', 'showAll');
@@ -126,89 +147,79 @@
           }
           return this;
         },
-        bar: undefined,
-        dragging: false,
+        resize: function() {
+          vpaned_resize.call(this);
+          this.show.call(this);
+          for (let i = 0; i < this.children.length; i++) {
+            if (this.children[i].is_pixie) {
+              this.children[i].$.pixie('emit', 'resize');
+            }
+          }
+          return this;
+        },
+      };
+
+      const hpaned_resize = function() {
+        const width = this.$.width();
+        this.bar.$.css({
+          cursor: 'row-resize',
+          width: width,
+          height: this.options.border,
+        });
+        for (let i = 0; i < this.children.length; i++) {
+          this.children[i].$.css({
+            width: width,
+          });
+        }
+      };
+
+      const hpaned_init = function() {
+        hpaned_resize.call(this);
+        let dragging = false;
+        const this_ = this;
+        this.bar.$.mousedown(function(event) {
+          this_.drag_start_pos_y = event.clientY;
+          this_.options_pos_init = this_.options.true_pos;
+          dragging = true;
+        });
+        $(document).mousemove(function(event) {
+          if (dragging) {
+            if (event.buttons % 2 != 0) {
+              if (dragging) {
+                const delta = event.clientY - this_.drag_start_pos_y;
+                this_.options.true_pos = this_.options_pos_init + delta;
+              }
+            } else {
+              dragging = false;
+            }
+            this_.show.call(this_);
+          }
+        });
       };
 
       const hpaned = {
         show: function() {
-          for (let i = 0; i < this.children.length; i++) {
-            this.children[i].$.detach();
+          const box = create_box(this.$);
+          if (!this.initialized) {
+            paned_init.call(this);
+            hpaned_init.call(this);
+            detach_children(this.children);
+            pos_normalize(this.options, box.height);
+            this.children[0].$.appendTo(this.$);
+            this.bar.$.appendTo(this.$);
+            this.children[1].$.appendTo(this.$);
+            this.initialized = true;
           }
-          this.$.empty();
-          const box = {
-            left: 0,
-            top: 0,
-            width: this.$.width(),
-            height: this.$.height(),
-          };
-          if (typeof this.options.pos === 'string' && this.options.pos.match(/%/)) {
-            this.options.pos = eval(
-              this.options.pos.replace(/%/, ' / 100 * ' + box.height)
-            );
-          }
-          if (this.bar == undefined) {
-            this.bar = {
-              $: $('<div></div>').css({
-                backgroundColor: this.options.color,
-                cursor: 'row-resize',
-              }),
-            };
-          }
-          this.$.off('mousemove');
-          this.bar.$.off('mousedown').off('mouseup');
           this.children[0].$.css({
-            left: box.left,
-            top: box.top,
-            width: box.width,
-            height: this.options.pos,
-            position: 'absolute',
+            height: this.options.true_pos,
           });
           this.children[1].$.css({
-            left: box.left,
-            top: box.top + this.options.pos + this.options.border,
-            width: box.width,
-            height: box.height - this.options.pos - this.options.border,
-            position: 'absolute',
+            top: this.options.true_pos + this.options.border,
+            height: box.height - this.options.true_pos - this.options.border,
           });
-          let this_ = this;
           this.bar.$.css({
-            left: box.left,
-            top: box.top + this.options.pos,
-            width: box.width,
-            height: this.options.border,
-            position: 'absolute',
-          }).mousedown(function(event) {
-            this_.dragging = true;
-            this_.dragging_mouse_relative_pos = event.clientY - box.top;
-            this_.dragging_initial_pos = this_.options.pos;
-          }).mouseup(function(event) {
-            let delta = event.clientY
-                      - box.top
-                      - this_.dragging_mouse_relative_pos;
-            this_.options.pos = this_.dragging_initial_pos + delta;
-            this_.show.call(this_);
-            this_.dragging = false;
-            this_.bar.$
-              .off('mousedown')
-              .mousedown(function(event) {
-                this_.dragging = true;
-                this_.dragging_mouse_relative_pos = event.clientY - box.top;
-                this_.dragging_initial_pos = this_.options.pos;
-              });
+            top: this.options.true_pos,
           });
-          this.$.mousemove(function(event) {
-            if (this_.dragging) {
-              let delta = event.clientY
-                        - box.top
-                        - this_.dragging_mouse_relative_pos;
-              this_.options.pos = this_.dragging_initial_pos + delta;
-              this_.show.call(this_);
-            }
-          });
-          this.children[0].$.appendTo(this.$);
-          this.bar.$.appendTo(this.$);
-          this.children[1].$.appendTo(this.$);
           for (let i = 0; i < this.children.length; i++) {
             if (this.children[i].is_pixie) {
               this.children[i].$.pixie('emit', 'showAll');
@@ -216,8 +227,17 @@
           }
           return this;
         },
-        bar: undefined,
-        dragging: false,
+        resize: function() {
+          hpaned_resize.call(this);
+          this.show.call(this);
+          for (let i = 0; i < this.children.length; i++) {
+            if (this.children[i].is_pixie) {
+              this.children[i].$.pixie('emit', 'resize');
+            }
+          }
+          return this;
+        },
+        initialized: false,
       };
 
       const paned = {
@@ -269,8 +289,15 @@
           $.extend(true, ret, container);
           return ret;
         },
-        showAll: function() {
+        signal_showAll: function() {
           this.show();
+          for (let i = 0; i < this.children.length; i++) {
+            this.children[i].$.pixie('emit', 'showAll');
+          }
+          return this;
+        },
+        signal_resize: function() {
+          this.resize();
           return this;
         },
         children: [],
@@ -288,7 +315,14 @@
           // /* global as_pixie */
           const pixie = as_pixie(this);
           if (pixie.kind_of['container']) {
-            pixie.showAll();
+            pixie.signal_showAll();
+          }
+          return this;
+        },
+        resize: function() {
+          const pixie = as_pixie(this);
+          if (pixie.kind_of['container']) {
+            pixie.signal_resize();
           }
           return this;
         },

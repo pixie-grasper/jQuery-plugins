@@ -22,6 +22,7 @@ task :build do
     }
     let ret = {
       $: element,
+      kind_of: {},
     };
     element[0].as_pixie = ret;
     return ret;
@@ -70,6 +71,9 @@ task :build do
 })(jQuery);
     EOJ
   end
+end
 
+task :release => :build
+task :release do
   `java -jar external/closure/closure-compiler-v20161024.jar --js_output_file build/jquery-pixie.min.js build/jquery-pixie.js`
 end

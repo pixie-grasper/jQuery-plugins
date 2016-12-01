@@ -5,7 +5,14 @@ const handler = {
     /* global as_pixie */
     const pixie = as_pixie(this);
     if (pixie.kind_of['container']) {
-      pixie.showAll();
+      pixie.signal_showAll();
+    }
+    return this;
+  },
+  resize: function() {
+    const pixie = as_pixie(this);
+    if (pixie.kind_of['container']) {
+      pixie.signal_resize();
     }
     return this;
   },

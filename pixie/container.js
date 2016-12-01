@@ -10,8 +10,15 @@ const container = {
     $.extend(true, ret, container);
     return ret;
   },
-  showAll: function() {
+  signal_showAll: function() {
     this.show();
+    for (let i = 0; i < this.children.length; i++) {
+      this.children[i].$.pixie('emit', 'showAll');
+    }
+    return this;
+  },
+  signal_resize: function() {
+    this.resize();
     return this;
   },
   children: [],
