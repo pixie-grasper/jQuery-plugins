@@ -132,7 +132,7 @@ const vpaned = {
   },
   resize: function() {
     vpaned_resize.call(this);
-    this.show.call(this);
+    this.show();
     for (let i = 0; i < this.children.length; i++) {
       if (this.children[i].is_pixie) {
         this.children[i].$.pixie('emit', 'resize');
@@ -177,7 +177,7 @@ const hpaned_init = function() {
       } else if (this_.options.true_pos > this_.options.true_pos_max) {
         this_.options.true_pos = this_.options.true_pos_max;
       }
-      this_.show.call(this_);
+      this_.show();
     }
   }).mouseup(function(event) {
     dragging = false;
@@ -214,7 +214,7 @@ const hpaned = {
   },
   resize: function() {
     hpaned_resize.call(this);
-    this.show.call(this);
+    this.show();
     for (let i = 0; i < this.children.length; i++) {
       if (this.children[i].is_pixie) {
         this.children[i].$.pixie('emit', 'resize');
@@ -240,6 +240,9 @@ const paned = {
     } else {
       $.error('bad orientation');
     }
+    $(window).resize(function() {
+      ret.resize();
+    });
     return ret;
   },
   add1: function(element) {

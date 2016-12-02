@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src='../external/jquery-3.1.1/jquery-3.1.1.min.js'></script>
+    <script src='../build/jquery-pixie.min.js'></script>
+    <script lang='javascript'>
+      const figures = [
+        {
+          type: 'circle',
+          cx: '100',
+          cy: '100',
+          r: '50',
+          fill: 'black',
+        },
+        {
+          type: 'circle',
+          cx: '150',
+          cy: '100',
+          r: '50',
+          fill: 'red',
+        },
+        {
+          type: 'circle',
+          cx: '100',
+          cy: '150',
+          r: '50',
+          fill: 'green',
+        },
+        {
+          type: 'circle',
+          cx: '150',
+          cy: '150',
+          r: '50',
+          fill: 'blue',
+        },
+      ];
+      $(function() {
+        $('#top').pixie('atlas', {
+          listup: function(lx, by, rx, ty) {
+            return [0, 1, 2, 3];
+          },
+          fetch: function(id) {
+            return figures[id];
+          },
+        }).show();
+      });
+    </script>
+    <title>Atlas</title>
+  </head>
+  <body style='margin: 0;'>
+    <div id='top' style='width: 100vw; height: 100vh;'>
+    </div>
+  </body>
+</html>
