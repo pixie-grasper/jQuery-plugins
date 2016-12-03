@@ -221,7 +221,7 @@ const set_initial_parameters = function() {
   } else if (xd == 0 && yd == 0) {
     this.x = 0;
     this.y = 0;
-    this.scale =1;
+    this.scale = 1;
   } else {
     $.error('too few initial parameter detected.');
   }
