@@ -806,6 +806,14 @@
           drag_start_pos_y = event.clientY;
           init_center_x = this_.x + box.width * scale_inv;
           init_center_y = this_.y + box.height * scale_inv;
+          const style = $('body')[0].style;
+          style.cursor = 'grabbing';
+          if (style.cursor == '') {
+            style.cursor = '-moz-grabbing';
+            if (style.cursor == '') {
+              style.cursor = '-webkit-grabbing';
+            }
+          }
           dragging = true;
         }).on(wheel_event_name(), function(event) {
           const box = create_box(this_.$);
@@ -838,6 +846,9 @@
           const y = this_.y + (box.height - event.clientY) * scale_inv;
           this_.update_overlaps(x, y);
         }).mouseup(function(event) {
+          $('body').css({
+            cursor: '',
+          });
           dragging = false;
         });
       };
