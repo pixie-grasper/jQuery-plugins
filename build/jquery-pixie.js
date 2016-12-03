@@ -897,7 +897,8 @@
                      rendering[3] > this.cached_box_size[3]) {
             const f = [Math.min, Math.min, Math.max, Math.max];
             for (let i = 0; i < 4; i++) {
-              this.cached_box_size[i] = f[i](rendering[i], this.cached_box_size[i]);
+              this.cached_box_size[i] =
+                f[i](rendering[i], this.cached_box_size[i]);
             }
             cache_refreshed = true;
           }
