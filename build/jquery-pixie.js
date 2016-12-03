@@ -375,6 +375,17 @@
         },
         update_overlaps: function(x, y, scale) {
         },
+        initial: {
+          scale: undefined,
+          center: {
+            x: undefined,
+            y: undefined,
+          },
+          left: undefined,
+          top: undefined,
+          right: undefined,
+          bottom: undefined,
+        },
       };
 
       const create_box = function($) {
@@ -452,7 +463,141 @@
         }
       };
 
+      const count_well_defined = function(...args) {
+        let c = 0;
+        for (let i = 0; i < args.length; i++) {
+          if (typeof args[i] !== 'undefined') {
+            c++;
+          }
+        }
+        return c;
+      };
+
+      const set_initial_parameters = function() {
+        const box = create_box(this.$);
+        const initial = this.options.initial;
+        const xd = count_well_defined(
+          initial.scale,
+          initial.left,
+          initial.right,
+          initial.center.x
+        );
+        const yd = count_well_defined(
+          initial.scale,
+          initial.top,
+          initial.bottom,
+          initial.center.y
+        );
+        if (xd > 2 || yd > 2) {
+          $.error('too many initial parameter detected.');
+        } else if (xd == 2 && yd == 2) {
+          if (initial.scale) {
+            this.scale = initial.scale;
+            if (initial.left) {
+              this.x = initial.left;
+            } else if (initial.center.x) {
+              this.x = initial.center.x - box.width * initial.scale / 2;
+            } else {
+              this.x = initial.right - box.width * initial.scale;
+            }
+            if (initial.top) {
+              this.y = initial.top - box.height * initial.scale;
+            } else if (initial.center.y) {
+              this.y = initial.center.y - box.height * initial.scale / 2;
+            } else {
+              this.y = initial.bottom;
+            }
+          } else {
+            let left;
+            let top;
+            let right;
+            let bottom;
+            let center_x;
+            let center_y;
+            let scale_x;
+            let scale_y;
+            if (initial.left && initial.right) {
+              left = initial.left;
+              right = initial.right;
+            } else if (initial.left && initial.center.x) {
+              left = initial.left;
+              right = initial.center.x * 2 - initial.left;
+            } else {
+              left = initial.center.x * 2 - initial.right;
+              right = initial.right;
+            }
+            scale_x = box.width / (right - left);
+            center_x = (left + right) / 2;
+            if (initial.top && initial.bottom) {
+              top = initial.top;
+              bottom = initial.bottom;
+            } else if (initial.top && initial.center.y) {
+              top = initial.top;
+              bottom = initial.center * 2 - initial.top;
+            } else {
+              top = initial.center * 2 - initial.bottom;
+              bottom = initial.bottom;
+            }
+            scale_y = box.height / (top - bottom);
+            center_y = (top + bottom) / 2;
+            this.scale = Math.min(scale_x, scale_y);
+            const scale_inv = 1 / this.scale;
+            this.x = center_x - box.width * scale_inv / 2;
+            this.y = center_y - box.height * scale_inv / 2;
+          }
+        } else if (xd == 1 && yd == 2 && typeof initial.scale === 'undefined') {
+          let top;
+          let bottom;
+          if (initial.top && initial.bottom) {
+            top = initial.top;
+            bottom = initial.bottom;
+          } else if (initial.top && initial.center.y) {
+            top = initial.top;
+            bottom = initial.center * 2 - initial.top;
+          } else {
+            top = initial.center * 2 - initial.bottom;
+            bottom = initial.bottom;
+          }
+          this.scale = box.height / (top - bottom);
+          if (initial.left) {
+            this.x = initial.left;
+          } else if (initial.center.x) {
+            this.x = initial.center.x - box.width * this.scale / 2;
+          } else {
+            this.x = initial.right - box.width * this.scale;
+          }
+        } else if (xd == 2 && yd == 1 && typeof initial.scale === 'undefined') {
+          let left;
+          let right;
+          if (initial.left && initial.right) {
+            left = initial.left;
+            right = initial.right;
+          } else if (initial.left && initial.center.x) {
+            left = initial.left;
+            right = initial.center.x * 2 - initial.left;
+          } else {
+            left = initial.center.x * 2 - initial.right;
+            right = initial.right;
+          }
+          this.scale = box.width / (right - left);
+          if (initial.top) {
+            this.y = initial.top - box.height * this.scale;
+          } else if (initial.center.y) {
+            this.y = initial.center.y - box.height * this.scale / 2;
+          } else {
+            this.y = initial.bottom;
+          }
+        } else if (xd == 0 && yd == 0) {
+          this.x = 0;
+          this.y = 0;
+          this.scale =1;
+        } else {
+          $.error('too few initial parameter detected.');
+        }
+      };
+
       const atlas_init = function() {
+        set_initial_parameters.call(this);
         const box = create_box(this.$);
         this.svg = {
           _: _('svg').attr({
@@ -632,9 +777,6 @@
         },
         initialized: false,
         cached_box_size: null,
-        x: 0,
-        y: 0,
-        scale: 1,
         scale_base: 1.3,
       };
 
