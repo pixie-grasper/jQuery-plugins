@@ -483,6 +483,7 @@
               }
               vbox[2] = {
                 badness: width - normal_width,
+                height: hbox_height,
                 count_hss: count_hss,
                 count_hskip: count_hskip,
               };
@@ -531,7 +532,7 @@
                   case 'box':
                     hbox.args[0].attr({
                       x: x,
-                      y: y + hbox.args[0].prop('scrollHeight'),
+                      y: y + parameter.height,
                     });
                     x += hbox.args[0].prop('scrollWidth');
                     break;
