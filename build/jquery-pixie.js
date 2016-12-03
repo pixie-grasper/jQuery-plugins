@@ -518,7 +518,9 @@
                 const hbox = hboxes[j];
                 switch (hbox.command) {
                   case 'hss':
-                    x += parameter.badness / parameter.count_hss;
+                    if (parameter.count_hss != 0) {
+                      x += parameter.badness / parameter.count_hss;
+                    }
                     break;
                   case 'hskip':
                     if (parameter.count_hskip != 0) {
@@ -541,7 +543,9 @@
             } else {
               switch (vbox[1].command) {
                 case 'vss':
-                  y += badness / count_vss;
+                  if (count_vss != 0) {
+                    y += badness / count_vss;
+                  }
                   break;
                 case 'vskip':
                   if (count_vskip != 0) {
