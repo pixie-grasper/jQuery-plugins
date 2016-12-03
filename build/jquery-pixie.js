@@ -405,11 +405,12 @@
             };
           })(i);
         }
-        let boxes = [];
 
         let vboxes;
+        let boxes;
         this.load = function() {
           vboxes = [];
+          boxes = [];
           let hboxes = [];
           for (let i = 0; i < command_list.length; i++) {
             switch (command_list[i].command) {
@@ -441,6 +442,9 @@
 
         this.show = function(g, width, height) {
           if (!g._.firstChild) {
+            if (!boxes) {
+              this.load();
+            }
             for (let i = 0; i < boxes.length; i++) {
               g.append(boxes[i].args[0]);
             }
@@ -792,13 +796,16 @@
         let dragging = false;
         let drag_start_pos_x = null;
         let drag_start_pos_y = null;
-        let init_pos_x = null;
-        let init_pos_y = null;
+        let init_center_x = null;
+        let init_center_y = null;
         this.svg.$.mousedown(function(event) {
+          const box = create_box(this_.$);
+          const scale = this_.scale;
+          const scale_inv = 1 / scale;
           drag_start_pos_x = event.clientX;
           drag_start_pos_y = event.clientY;
-          init_pos_x = this_.x;
-          init_pos_y = this_.y;
+          init_center_x = this_.x + box.width * scale_inv;
+          init_center_y = this_.y + box.height * scale_inv;
           dragging = true;
         }).on(wheel_event_name(), function(event) {
           const box = create_box(this_.$);
@@ -809,28 +816,24 @@
           const x = this_.x + event.clientX * scale_inv;
           const y = this_.y + (box.height - event.clientY) * scale_inv;
           if (wheel_direction(event) < 0) {
-            this_.scale *= scale_base_inv;
-            this_.x = x - (x - this_.x) * scale_base;
-            this_.y = y - (y - this_.y) * scale_base;
+            this_.zoom(x, y, scale_base);
           } else {
-            this_.scale *= scale_base;
-            this_.x = x - (x - this_.x) * scale_base_inv;
-            this_.y = y - (y - this_.y) * scale_base_inv;
+            this_.zoom(x, y, scale_base_inv);
           }
           this_.show();
           this_.update_overlaps(x, y);
         });
         $(document).mousemove(function(event) {
+          const scale = this_.scale;
+          const scale_inv = 1 / scale;
           if (dragging) {
             const delta_x = event.clientX - drag_start_pos_x;
             const delta_y = event.clientY - drag_start_pos_y;
-            this_.x = init_pos_x - delta_x / this_.scale;
-            this_.y = init_pos_y + delta_y / this_.scale;
-            this_.show();
+            const center_x = init_center_x - delta_x * scale_inv;
+            const center_y = init_center_y + delta_y * scale_inv;
+            this_.moveto(center_x, center_y);
           }
           const box = create_box(this_.$);
-          const scale = this_.scale;
-          const scale_inv = 1 / scale;
           const x = this_.x + event.clientX * scale_inv;
           const y = this_.y + (box.height - event.clientY) * scale_inv;
           this_.update_overlaps(x, y);
@@ -954,10 +957,26 @@
           this.show.call(this);
           return this;
         },
+        zoom: function(center_x, center_y, ratio) {
+          this.scale /= ratio;
+          this.x = center_x - (center_x - this.x) * ratio;
+          this.y = center_y - (center_y - this.y) * ratio;
+          return this;
+        },
+        moveto: function(center_x, center_y) {
+          const box = create_box(this.$);
+          const scale = this.scale;
+          const scale_inv = 1 / scale;
+          this.x = center_x - box.width * scale_inv;
+          this.y = center_y - box.height * scale_inv;
+          this.show();
+          return this;
+        },
         update_overlaps: function(x, y) {
           const box = create_box(this.$);
           this.options.update_overlaps(x, y, this.scale);
           this.overlap_elements.show(this.g2._, box.width, box.height);
+          return this;
         },
         initialized: false,
         cached_box_size: null,
