@@ -212,7 +212,7 @@ const SVG = function(tagname) {
   this.attr = function(hash) {
     let _ = this._;
     Object.keys(hash).forEach(function(key) {
-      if (hash[key] == undefined || hash[key] == '') {
+      if (!hash[key] || hash[key] == '') {
         _.removeAttribute(key);
       } else {
         _.setAttribute(key, hash[key]);
