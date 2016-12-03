@@ -67,7 +67,9 @@ task :build do
     }
   };
 
-  $('.pixie-widget').hide();
+  $(function() {
+    $('.pixie-widget').hide();
+  });
 })(jQuery);
     EOJ
   end

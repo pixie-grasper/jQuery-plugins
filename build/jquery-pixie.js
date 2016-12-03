@@ -1012,5 +1012,7 @@
     }
   };
 
-  $('.pixie-widget').hide();
+  $(function() {
+    $('.pixie-widget').hide();
+  });
 })(jQuery);
