@@ -385,6 +385,7 @@
           right: undefined,
           bottom: undefined,
         },
+        scale_base: 1.3,
       };
 
       const Area = function() {
@@ -580,7 +581,11 @@
         this.attr = function(hash) {
           let _ = this._;
           Object.keys(hash).forEach(function(key) {
-            _.setAttribute(key, hash[key]);
+            if (hash[key] == undefined || hash[key] == '') {
+              _.removeAttribute(key);
+            } else {
+              _.setAttribute(key, hash[key]);
+            }
           });
           return this;
         };
@@ -819,7 +824,7 @@
           const box = create_box(this_.$);
           const scale = this_.scale;
           const scale_inv = 1 / scale;
-          const scale_base = this_.scale_base;
+          const scale_base = this_.options.scale_base;
           const scale_base_inv = 1 / scale_base;
           const x = this_.x + event.clientX * scale_inv;
           const y = this_.y + (box.height - event.clientY) * scale_inv;
@@ -912,8 +917,8 @@
                 case 'circle': {
                   const svg = {
                     _: _('circle').attr({
-                      stroke: item.stroke || '',
-                      fill: item.fill || '',
+                      stroke: item.stroke,
+                      fill: item.fill,
                     }),
                     type: 'circle',
                     cx: item.cx,
@@ -991,7 +996,6 @@
         },
         initialized: false,
         cached_box_size: null,
-        scale_base: 1.3,
       };
 
       return function(...args) {
