@@ -370,8 +370,7 @@
       // jQuery Plugin: pixie::atlas
 
       const default_options = {
-        overlap_elements: function(width, height) {
-          return [];
+        overlap_elements: function(area) {
         },
         update_overlaps: function(x, y, scale) {
         },
@@ -386,6 +385,177 @@
           right: undefined,
           bottom: undefined,
         },
+      };
+
+      const Area = function() {
+        let command_list = [];
+        const commands = [
+          'vss', 'vskip', 'vkern',
+          'hss', 'hskip', 'hkern',
+          'box',
+        ];
+        for (let i = 0; i < commands.length; i++) {
+          this[commands[i]] = (function(i) {
+            return function(...args) {
+              command_list.push({
+                command: commands[i],
+                args: args,
+              });
+              return this;
+            };
+          })(i);
+        }
+        let boxes = [];
+
+        let vboxes;
+        this.load = function() {
+          vboxes = [];
+          let hboxes = [];
+          for (let i = 0; i < command_list.length; i++) {
+            switch (command_list[i].command) {
+              case 'vss':
+              case 'vskip':
+              case 'vkern':
+                if (hboxes.length != 0) {
+                  vboxes.push([0, hboxes]);
+                  hboxes = [];
+                }
+                vboxes.push([1, command_list[i]]);
+                break;
+              case 'hss':
+              case 'hskip':
+              case 'hkern':
+                hboxes.push(command_list[i]);
+                break;
+              case 'box':
+                hboxes.push(command_list[i]);
+                boxes.push(command_list[i]);
+                break;
+            }
+          }
+          if (hboxes.length != 0) {
+            vboxes.push([0, hboxes]);
+          }
+          return this;
+        };
+
+        this.show = function(g, width, height) {
+          if (!g._.firstChild) {
+            for (let i = 0; i < boxes.length; i++) {
+              g.append(boxes[i].args[0]);
+            }
+          }
+          let normal_height = 0;
+          let count_vss = 0;
+          let count_vskip = 0;
+          for (let i = 0; i < vboxes.length; i++) {
+            const vbox = vboxes[i];
+            if (vbox[0] == 0) {
+              const hboxes = vbox[1];
+              let normal_width = 0;
+              let hbox_height = 0;
+              let count_hss = 0;
+              let count_hskip = 0;
+              for (let j = 0; j < hboxes.length; j++) {
+                const hbox = hboxes[j];
+                switch (hbox.command) {
+                  case 'hss':
+                    count_hss++;
+                    break;
+                  case 'hskip':
+                    count_hskip++;
+                    normal_width += hbox.args[0];
+                    break;
+                  case 'hkern':
+                    normal_width += hbox.args[0];
+                    break;
+                  case 'box':
+                    normal_width += hbox.args[0].prop('scrollWidth');
+                    hbox_height = Math.max(
+                      hbox_height,
+                      hbox.args[0].prop('scrollHeight')
+                    );
+                    break;
+                }
+              }
+              if (count_hss != 0) {
+                count_hskip = 0;
+              }
+              vbox[2] = {
+                badness: width - normal_width,
+                count_hss: count_hss,
+                count_hskip: count_hskip,
+              };
+              normal_height += hbox_height;
+            } else {
+              switch (vbox[1].command) {
+                case 'vss':
+                  count_vss++;
+                  break;
+                case 'vskip':
+                  count_vskip++;
+                  normal_height += vbox[1].args[0];
+                  break;
+                case 'vkern':
+                  normal_height += vbox[1].args[0];
+                  break;
+              }
+            }
+          }
+          if (count_vss != 0) {
+            count_vskip = 0;
+          }
+          const badness = height - normal_height;
+          let y = 0;
+          for (let i = 0; i < vboxes.length; i++) {
+            const vbox = vboxes[i];
+            if (vbox[0] == 0) {
+              let x = 0;
+              const hboxes = vbox[1];
+              const parameter = vbox[2];
+              for (let j = 0; j < hboxes.length; j++) {
+                const hbox = hboxes[j];
+                switch (hbox.command) {
+                  case 'hss':
+                    x += parameter.badness / parameter.count_hss;
+                    break;
+                  case 'hskip':
+                    if (parameter.count_hskip != 0) {
+                      x += parameter.badness / parameter.count_hskip;
+                    }
+                    x += hbox.args[0];
+                    break;
+                  case 'hkern':
+                    x += hbox.args[0];
+                    break;
+                  case 'box':
+                    hbox.args[0].attr({
+                      x: x,
+                      y: y + hbox.args[0].prop('scrollHeight'),
+                    });
+                    x += hbox.args[0].prop('scrollWidth');
+                    break;
+                }
+              }
+            } else {
+              switch (vbox[1].command) {
+                case 'vss':
+                  y += badness / count_vss;
+                  break;
+                case 'vskip':
+                  if (count_vskip != 0) {
+                    y += badness / count_vskip;
+                  }
+                  y += vbox[1].args[0];
+                  break;
+                case 'vkern':
+                  y += vbox[1].args[0];
+                  break;
+              }
+            }
+          }
+          return this;
+        };
       };
 
       const create_box = function($) {
@@ -610,7 +780,9 @@
           }),
         };
         this.svg.$ = $(this.svg._._).appendTo(this.$);
-        this.overlap_elements = this.options.overlap_elements(box.width, box.height);
+        this.overlap_elements = new Area();
+        this.options.overlap_elements(this.overlap_elements);
+        this.overlap_elements.load();
         const this_ = this;
         let dragging = false;
         let drag_start_pos_x = null;
@@ -641,7 +813,7 @@
             this_.y = y - (y - this_.y) * scale_base_inv;
           }
           this_.show();
-          this_.options.update_overlaps(x, y, this_.scale);
+          this_.update_overlaps(x, y);
         });
         $(document).mousemove(function(event) {
           if (dragging) {
@@ -656,7 +828,7 @@
           const scale_inv = 1 / scale;
           const x = this_.x + event.clientX * scale_inv;
           const y = this_.y + (box.height - event.clientY) * scale_inv;
-          this_.options.update_overlaps(x, y, scale);
+          this_.update_overlaps(x, y);
         }).mouseup(function(event) {
           dragging = false;
         });
@@ -739,9 +911,11 @@
                 }
               }
             }
-            for (let i = 0; i < this.overlap_elements.length; i++) {
-              this.g._.append(this.overlap_elements[i]);
-            }
+            this.g2 = {
+              _: _('g'),
+            };
+            this.g2._.appendTo(this.svg._);
+            this.overlap_elements.show(this.g2._, box.width, box.height);
           }
           const svg_list = this.cache_SVG_list;
           for (let i = 0; i < svg_list.length; i++) {
@@ -774,6 +948,11 @@
           });
           this.show.call(this);
           return this;
+        },
+        update_overlaps: function(x, y) {
+          const box = create_box(this.$);
+          this.options.update_overlaps(x, y, this.scale);
+          this.overlap_elements.show(this.g2._, box.width, box.height);
         },
         initialized: false,
         cached_box_size: null,

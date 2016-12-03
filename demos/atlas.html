@@ -48,6 +48,17 @@
             left: 50,
             right: 200,
           },
+          overlap_elements: function(area) {
+            area
+              .vss()
+              .hkern(10)
+              .box($('#overlap'))
+              .hss()
+              .vkern(10);
+          },
+          update_overlaps: function(x, y, scale) {
+            $('#overlap').text('x: ' + x + ', y: ' + y + ', scale: ' + scale);
+          },
         }).show();
       });
     </script>
@@ -55,6 +66,12 @@
   </head>
   <body style='margin: 0;'>
     <div id='top' style='width: 100vw; height: 100vh;'>
+    </div>
+    <div class='pixie-widget'>
+      <svg xmlns='http://www.w3.org/2000/svg' style='display: none;'>
+        <text id='overlap'>
+        </text>
+      </svg>
     </div>
   </body>
 </html>
